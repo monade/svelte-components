@@ -17,9 +17,15 @@
   export let meta: Readonly<PaginationMeta> = { lastPage: 0, currentPage: 0, totalPages: 0, previousPage: 0, nextPage: 0 };
   export let range: Readonly<number> = 5;
   export let align: Readonly<'center' | 'right' | 'left' | null> = null;
-  
+
   let page = 1;
   let ready = false;
+
+  $: isReady = ready && meta.totalPages > 1;
+  $: pages = getPages(page, range, meta);
+  $: previousDisabled = isPreviousDisabled(meta);
+  $: nextDisabled = isNextDisabled(meta);
+  $: alignClass = getAlignClass(align);
 
   onMount(() => {
     if (meta.currentPage) {
@@ -28,9 +34,7 @@
     }
   });
 
-  $: isReady = ready && meta.totalPages > 1;
-
-  $: pages = () => {
+  const getPages = (page, range, meta) => {
     const step = Math.floor(range / 2);
     let first = page - step;
     if (first <= 0) {
@@ -53,16 +57,13 @@
     }
     return items;
   };
-
-  $: previousDisabled = () => {
+  const isPreviousDisabled = meta => {
     return meta.previousPage == null;
   };
-
-  $: nextDisabled = () => {
+  const isNextDisabled = meta => {
     return meta.nextPage == null;
   };
-
-  $: alignClass = () => {
+  const getAlignClass = align => {
     switch (align) {
       case 'center':
         return 'justify-content-center';
@@ -110,30 +111,30 @@
 
 {#if isReady}
   <nav aria-label="Page navigation">
-    <ul class="pagination {alignClass()}">
-      <li class="page-item {previousDisabled() ? 'disabled' : ''}">
+    <ul class="pagination {alignClass}">
+      <li class="page-item {previousDisabled ? 'disabled' : ''}">
         <a class="page-link" href="#" aria-label="First" on:click|preventDefault={goToFirst}>
           <slot name="first-arrow">&lt;&lt;</slot>
         </a>
       </li>
-      <li class="page-item {previousDisabled() ? 'disabled' : ''}">
+      <li class="page-item {previousDisabled ? 'disabled' : ''}">
         <a class="page-link" href="#" aria-label="Previous" on:click|preventDefault={goToPrevious}>
           <slot name="left-arrow">⇦</slot>
         </a>
       </li>
 
-      {#each pages() as item}
+      {#each pages as item}
         <li class="page-item {isCurrent(item) ? 'active' : ''}">
           <a class="page-link" href="#" on:click|preventDefault={() => goTo(item)}>{item}</a>
         </li>
       {/each}
 
-      <li class="page-item {nextDisabled() ? 'disabled' : ''}">
+      <li class="page-item {nextDisabled ? 'disabled' : ''}">
         <a class="page-link" href="#" aria-label="Next" on:click|preventDefault={goToNext}>
           <slot name="right-arrow">⇨</slot>
         </a>
       </li>
-      <li class="page-item {nextDisabled() ? 'disabled' : ''}">
+      <li class="page-item {nextDisabled ? 'disabled' : ''}">
         <a class="page-link last-link" href="#" aria-label="Last" on:click|preventDefault={goToLast}>
           <slot name="last-arrow">&gt;&gt;</slot>
         </a>
